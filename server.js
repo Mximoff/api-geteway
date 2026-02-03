@@ -1,64 +1,131 @@
 const express = require('express');
-const app = express();
-const PORT = 8080;
+const rateLimit = require('express-rate-limit');
 
-app.get('/health', (req, res) => {
-  res.send('OK');
+const app = express();
+const PORT = process.env.PORT || 8080;
+
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100 // limit each IP to 100 requests per windowMs
 });
 
-app.get('/api/status', (req, res) => {
+app.use(limiter);
+app.use(express.json());
+
+// Health check
+app.get('/health', (req, res) => {
+  res.status(200).send('OK');
+});
+
+// Status endpoint
+app.get('/status', (req, res) => {
   res.json({
-    status: 'online',
-    service: 'API Gateway',
-    version: '1.0.0'
+    service: 'CDN Service',
+    status: 'operational',
+    version: '1.0.0',
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString()
   });
 });
 
+// Homepage
 app.get('/', (req, res) => {
-  res.send(
-    ```<!DOCTYPE html>
-    <html>
-    <head>
-      <title>API Gateway</title>
-      <style>
+  res.send(`
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CDN Service</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-          font-family: Arial;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          min-height: 100vh;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
         }
         .container {
-          background: white;
-          padding: 40px;
-          border-radius: 20px;
-          box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-          text-align: center;
+            background: white;
+            border-radius: 16px;
+            padding: 48px;
+            max-width: 600px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
         }
-        h1 { color: #667eea; }
-        .status {
-          background: #4ade80;
-          color: white;
-          padding: 10px 20px;
-          border-radius: 20px;
-          display: inline-block;
-          margin-top: 20px;
+        h1 {
+            color: #667eea;
+            font-size: 2.5rem;
+            margin-bottom: 16px;
         }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <h1>🚀 API Gateway</h1>
-        <p>Service is running smoothly</p>
-        <div class="status">● Online</div>
-      </div>
-    </body>
-    </html>```
-  );
+        p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+        .badge {
+            display: inline-block;
+            background: #10b981;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-top: 32px;
+        }
+        .stat {
+            background: #f9fafb;
+            padding: 16px;
+            border-radius: 8px;
+        }
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .stat-label {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 CDN Service</h1>
+        <p>High-performance content delivery and caching service</p>
+        <span class="badge">● Operational</span>
+        
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-value">99.9%</div>
+                <div class="stat-label">Uptime</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value">&lt;50ms</div>
+                <div class="stat-label">Latency</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+  `);
 });
 
-app.listen(PORT, () => {
-  console.log('API Gateway running on port ' + PORT);
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({ error: 'Not found' });
+});
+
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(CDN Service running on port ${PORT});
 });
