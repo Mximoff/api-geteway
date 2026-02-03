@@ -1,35 +1,30 @@
-FROM node:18-alpine
+FROM alpine:3.19
 
-# نصب tinyproxy
-RUN apk add --no-cache tinyproxy curl
+# نصب ابزارهای لازم
+RUN apk add --no-cache \
+    tinyproxy \
+    nodejs \
+    npm \
+    curl
 
-# دایرکتوری کاری
+# ساخت دایرکتوری‌ها
+RUN mkdir -p /app /var/log/tinyproxy /run/tinyproxy && \
+    chown -R nobody:nobody /var/log/tinyproxy /run/tinyproxy
+
+# کپی فایل‌ها
 WORKDIR /app
+COPY package*.json ./
+RUN npm install --production --silent
 
-# کپی package.json
-COPY package.json ./
-
-# نصب dependencies
-RUN npm install --production
-
-# کپی بقیه فایل‌ها
-COPY . .
-
-# تنظیمات tinyproxy
-RUN echo 'User nobody' > /etc/tinyproxy/tinyproxy.conf && \
-    echo 'Group nobody' >> /etc/tinyproxy/tinyproxy.conf && \
-    echo 'Port 3128' >> /etc/tinyproxy/tinyproxy.conf && \
-    echo 'Listen 0.0.0.0' >> /etc/tinyproxy/tinyproxy.conf && \
-    echo 'Timeout 600' >> /etc/tinyproxy/tinyproxy.conf && \
-    echo 'Allow 0.0.0.0/0' >> /etc/tinyproxy/tinyproxy.conf && \
-    echo 'ViaProxyName "CDN"' >> /etc/tinyproxy/tinyproxy.conf && \
-    mkdir -p /var/log/tinyproxy
+COPY server.js ./
+COPY tinyproxy.conf /etc/tinyproxy/tinyproxy.conf
+COPY start.sh ./
+RUN chmod +x start.sh
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=3s CMD curl -f http://localhost:8080/health || exit 1
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD curl -f http://localhost:8080/health || exit 1
 
-# باز کردن پورت
 EXPOSE 8080
 
-# اجرا
-CMD sh -c "tinyproxy -c /etc/tinyproxy/tinyproxy.conf && node server.js"
+CMD ["./start.sh"]
