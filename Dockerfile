@@ -1,30 +1,25 @@
-FROM alpine:3.19
+FROM node:18-alpine
 
-# Install required tools with obfuscated names
-RUN apk add --no-cache \
-    tinyproxy \
-    nodejs \
-    npm \
-    curl
+# نصب dependencies سیستمی
+RUN apk add --no-cache tini
 
-# Create directories
-RUN mkdir -p /app /var/log/tinyproxy /run/tinyproxy && \
-    chown -R nobody:nobody /var/log/tinyproxy /run/tinyproxy
-
-# Setup application
+# ساخت دایرکتوری کاری
 WORKDIR /app
+
+# کپی فایل‌های package
 COPY package*.json ./
-RUN npm install --production --silent
 
-COPY app.js ./
-COPY proxy.conf /etc/tinyproxy/tinyproxy.conf
-COPY run.sh ./
-RUN chmod +x run.sh
+# نصب dependencies (اگر بخواهی بعداً اضافه کنی)
+# RUN npm install --production
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD curl -f http://localhost:8080/health || exit 1
+# کپی کد اصلی
+COPY server.js .
 
-EXPOSE 8080
+# تعیین پورت
+EXPOSE 8000
 
-CMD ["./run.sh"]
+# استفاده از tini برای signal handling بهتر
+ENTRYPOINT ["/sbin/tini", "--"]
+
+# اجرای سرور
+CMD ["node", "server.js"]
