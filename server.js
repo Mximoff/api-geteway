@@ -16,7 +16,7 @@ app.get('/api/status', (req, res) => {
 
 app.get('/', (req, res) => {
   res.send(
-    <!DOCTYPE html>
+    ```<!DOCTYPE html>
     <html>
     <head>
       <title>API Gateway</title>
@@ -55,7 +55,7 @@ app.get('/', (req, res) => {
         <div class="status">● Online</div>
       </div>
     </body>
-    </html>
+    </html>```
   );
 });
 
