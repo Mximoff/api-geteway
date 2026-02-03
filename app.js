@@ -4,40 +4,39 @@ const rateLimit = require('express-rate-limit');
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-// Rate limiting
+// Rate limiting middleware
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100 // limit each IP to 100 requests per windowMs
+  windowMs: 15 * 60 * 1000,
+  max: 100
 });
 
 app.use(limiter);
 app.use(express.json());
 
-// Health check
+// Health check endpoint
 app.get('/health', (req, res) => {
-  res.status(200).send('OK');
+  res.status(200).json({ status: 'healthy' });
 });
 
 // Status endpoint
 app.get('/status', (req, res) => {
   res.json({
-    service: 'CDN Service',
+    service: 'Backend Service',
     status: 'operational',
-    version: '1.0.0',
     uptime: process.uptime(),
     timestamp: new Date().toISOString()
   });
 });
 
-// Homepage
+// Main endpoint
 app.get('/', (req, res) => {
   res.send(`
 <!DOCTYPE html>
-<html lang="en">
+<html dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CDN Service</title>
+    <title>Service</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -101,8 +100,8 @@ app.get('/', (req, res) => {
 </head>
 <body>
     <div class="container">
-        <h1>🚀 CDN Service</h1>
-        <p>High-performance content delivery and caching service</p>
+        <h1>🚀 Service</h1>
+        <p>Backend service is running</p>
         <span class="badge">● Operational</span>
         
         <div class="stats">
@@ -127,5 +126,5 @@ app.use((req, res) => {
 });
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`CDN Service running on port ${PORT}`);
+  console.log(`Service running on port ${PORT}`);
 });
