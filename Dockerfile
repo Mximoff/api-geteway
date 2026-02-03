@@ -16,7 +16,7 @@ COPY package*.json ./
 COPY server.js .
 
 # تعیین پورت
-EXPOSE 8000
+EXPOSE 8080
 
 # استفاده از tini برای signal handling بهتر
 ENTRYPOINT ["/sbin/tini", "--"]
